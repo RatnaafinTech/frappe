@@ -14,7 +14,7 @@ frappe.ui.form.ControlLink = class ControlLink extends frappe.ui.form.ControlDat
 		$(`<div class="link-field ui-front" style="position: relative;">
 			<input type="text" class="input-with-feedback form-control">
 			<span class="link-btn">
-				<a class="btn-open" tabIndex='-1' style="display: inline-block;" title="${__("Open Link")}">
+				<a class="btn-open" tabIndex='-1' style="display: inline-flex;" title="${__("Open Link")}">
 					${frappe.utils.icon("arrow-right", "xs")}
 				</a>
 			</span>
@@ -242,7 +242,7 @@ frappe.ui.form.ControlLink = class ControlLink extends frappe.ui.form.ControlDat
 				) {
 					html +=
 						'<br><span class="small">' +
-						__(frappe.utils.escape_html(d.description)) +
+						__(frappe.utils.escape_html(frappe.utils.html2text(d.description))) +
 						"</span>";
 				}
 				return $(`<div role="option">`)
@@ -406,11 +406,20 @@ frappe.ui.form.ControlLink = class ControlLink extends frappe.ui.form.ControlDat
 		const doctype = this.get_options();
 		if (!doctype) return;
 
+		const reference_doctype = this.get_reference_doctype() || "";
+		const docfield_parent =
+			this.df?.parent || reference_doctype || (this.frm && this.frm.doctype) || "";
+		const meta_df =
+			docfield_parent && this.df?.fieldname
+				? frappe.meta.get_docfield(docfield_parent, this.df.fieldname)
+				: null;
+
 		const args = {
 			txt,
 			doctype,
-			ignore_user_permissions: this.df.ignore_user_permissions,
-			reference_doctype: this.get_reference_doctype() || "",
+			ignore_user_permissions:
+				this.df?.ignore_user_permissions || meta_df?.ignore_user_permissions,
+			reference_doctype,
 			page_length: cint(frappe.boot.sysdefaults?.link_field_results_limit) || 10,
 			link_fieldname: this.df.fieldname,
 		};
@@ -937,6 +946,17 @@ frappe.ui.form.ControlLink = class ControlLink extends frappe.ui.form.ControlDat
 			)
 			.then((response) => {
 				if (!response) return;
+
+				const has_filters = !!(args.filters && Object.keys(args.filters).length);
+				if (!response.name && has_filters) {
+					frappe.show_alert({
+						message: __("{0}: {1} did not match any results.", [
+							__(this.df.label || this.df.fieldname),
+							value,
+						]),
+						indicator: "red",
+					});
+				}
 
 				update_dependant_fields(response);
 				return response.name;

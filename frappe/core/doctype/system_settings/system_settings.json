@@ -248,7 +248,6 @@
   },
   {
    "default": "0",
-   "description": "Note: Multiple sessions will be allowed in case of mobile device",
    "fieldname": "deny_multiple_sessions",
    "fieldtype": "Check",
    "label": "Allow only one session per user"
@@ -786,11 +785,10 @@
    "label": "Only allow System Managers to upload public files"
   }
  ],
- "hide_toolbar": 1,
  "icon": "fa fa-cog",
  "issingle": 1,
  "links": [],
- "modified": "2026-01-02 18:13:45.430712",
+ "modified": "2026-03-28 23:46:03.614749",
  "modified_by": "Administrator",
  "module": "Core",
  "name": "System Settings",
