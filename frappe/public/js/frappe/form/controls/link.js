@@ -14,7 +14,7 @@ frappe.ui.form.ControlLink = class ControlLink extends frappe.ui.form.ControlDat
 		$(`<div class="link-field ui-front" style="position: relative;">
 			<input type="text" class="input-with-feedback form-control">
 			<span class="link-btn">
-				<a class="btn-open" tabIndex='-1' style="display: inline-block;" title="${__("Open Link")}">
+				<a class="btn-open" tabIndex='-1' style="display: inline-flex;" title="${__("Open Link")}">
 					${frappe.utils.icon("arrow-right", "xs")}
 				</a>
 			</span>
@@ -165,6 +165,7 @@ frappe.ui.form.ControlLink = class ControlLink extends frappe.ui.form.ControlDat
 		return false;
 	}
 	new_doc() {
+		this.$input._created_new_doc = true; // This is used to disable HTTP cache on this link field
 		var doctype = this.get_options();
 		var me = this;
 
@@ -241,7 +242,7 @@ frappe.ui.form.ControlLink = class ControlLink extends frappe.ui.form.ControlDat
 				) {
 					html +=
 						'<br><span class="small">' +
-						__(frappe.utils.escape_html(d.description)) +
+						__(frappe.utils.escape_html(frappe.utils.html2text(d.description))) +
 						"</span>";
 				}
 				return $(`<div role="option">`)
@@ -285,6 +286,16 @@ frappe.ui.form.ControlLink = class ControlLink extends frappe.ui.form.ControlDat
 			if (!me.get_label_value()) {
 				// hide link arrow to doctype if none is set
 				me.$link.toggle(false);
+			}
+
+			const dropdown = this.awesomplete.ul;
+			const dropdownRect = dropdown.getBoundingClientRect();
+			const viewportWidth = window.innerWidth;
+
+			if (dropdownRect.right > viewportWidth) {
+				dropdown.classList.add("awesomplete-align-right");
+			} else {
+				dropdown.classList.remove("awesomplete-align-right");
 			}
 		});
 
@@ -425,7 +436,7 @@ frappe.ui.form.ControlLink = class ControlLink extends frappe.ui.form.ControlDat
 		}
 
 		const filters = args.filters;
-		let use_get = !term;
+		let use_get = !term && !this.$input._created_new_doc;
 		if (use_get) {
 			const [are_filters_large, filters_str] = this.are_filters_large(filters);
 			use_get = !are_filters_large;
